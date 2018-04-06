@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ISO15745Profile xmlns="http://www.profibus.com/GSDML/2003/11/DeviceProfile" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.profibus.com/GSDML/2003/11/DeviceProfile ..\XSD\GSDML-DeviceProfile-V2.3.xsd">
+  <ProfileHeader>
+    <ProfileIdentification>PROFINET Device Profile</ProfileIdentification>
+    <ProfileRevision>1.00</ProfileRevision>
+    <ProfileName>Device Profile for PROFINET Devices</ProfileName>
+    <ProfileSource>PROFIBUS Nutzerorganisation e. V. (PNO)</ProfileSource>
+    <ProfileClassID>Device</ProfileClassID>
+    <ISO15745Reference>
+      <ISO15745Part>4</ISO15745Part>
+      <ISO15745Edition>1</ISO15745Edition>
+      <ProfileTechnology>GSDML</ProfileTechnology>
+    </ISO15745Reference>
+  </ProfileHeader>
+  <ProfileBody>
+    <DeviceIdentity VendorID="0x504E" DeviceID="0x5079">
+      <InfoText TextId="Awesome I/O-Device running on Python"/>
+      <VendorName Value="Python ProfiNet"/>
+    </DeviceIdentity>
+    <DeviceFunction>
+      <Family MainFamily="I/O" ProductFamily="Python"/>
+    </DeviceFunction>
+    <ApplicationProcess>
+      <DeviceAccessPointList>
+        <DeviceAccessPointItem ID="DAP 1" PhysicalSlots="0..1" ModuleIdentNumber="0x00000001" MinDeviceInterval="1" ImplementationType="Python" DNS_CompatibleName="IO-PY" FixedInSlots="0" ObjectUUID_LocalIndex="1" DeviceAccessSupported="true">
+          <ModuleInfo>
+            <Name TextId="Python PN V1.0"/>
+            <InfoText TextId="Infotext Python ProfiNet"/>
+            <VendorName Value="Python ProfiNet"/>
+            <OrderNumber Value="Anything that runs Linux"/>
+            <HardwareRelease Value="A1.0"/>
+            <SoftwareRelease Value="V01.00.00"/>
+          </ModuleInfo>
+          <IOConfigData MaxInputLength="256" MaxOutputLength="256"/>
+          <UseableModules>
+            <ModuleItemRef ModuleItemTarget="ID_Mod_01" AllowedInSlots="1"/>
+            <ModuleItemRef ModuleItemTarget="ID_Mod_02" AllowedInSlots="1"/>
+          </UseableModules>
+          <VirtualSubmoduleList>
+            <VirtualSubmoduleItem ID="DAP 1" SubmoduleIdentNumber="0x0001">
+              <IOData IOPS_Length="1" IOCS_Length="1"/>
+              <ModuleInfo>
+                <Name TextId="Python PN V1.0"/>
+                <InfoText TextId="Infotext Python ProfiNet"/>
+              </ModuleInfo>
+            </VirtualSubmoduleItem>
+          </VirtualSubmoduleList>
+          <SystemDefinedSubmoduleList>
+            <InterfaceSubmoduleItem SupportedRT_Class="Class1" SupportedProtocols="LLDP" NetworkComponentDiagnosisSupported="true" SubslotNumber="32768" TextId="InterfaceName" SubmoduleIdentNumber="0x0002">
+              <ApplicationRelations>
+                <TimingProperties SendClock="8 16 32"/>
+              </ApplicationRelations>
+            </InterfaceSubmoduleItem>
+            <PortSubmoduleItem SubslotNumber="32769" MaxPortRxDelay="350" MaxPortTxDelay="158" LinkStateDiagnosisCapability="Up+Down" TextId="IDT_Port1" SubmoduleIdentNumber="0x0003"/>
+          </SystemDefinedSubmoduleList>
+        </DeviceAccessPointItem>
+      </DeviceAccessPointList>
+    </ApplicationProcess>
+  </ProfileBody>
+</ISO15745Profile>
