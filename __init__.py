@@ -3,7 +3,7 @@
 import socket
 import pndcp
 
-dcpServer = pndcp.PNDCP("vboxnet0")
+dcpServer = pndcp.PnDcp("lo")
 dcpServer.start()
 
 while dcpServer.is_alive():
@@ -11,3 +11,4 @@ while dcpServer.is_alive():
         payload = 0
     except KeyboardInterrupt:
         dcpServer.stop()
+        dcpServer.join()
