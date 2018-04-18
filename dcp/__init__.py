@@ -1,53 +1,23 @@
-import threading
 import socket
 import logging
-import netifaces
 logging.basicConfig(level=logging.DEBUG)
 
-class PnDcp(threading.Thread):
+class Dcp():
+    _typeOfStation = 'Python ProfiNET'
+    _nameOfStation = 'io-python'
+    _vendorId = 0x504e
+    _deviceId = 0x5079
     _deviceRole = 0x01
-    _ipGateway = '192.168.0.1'
     _macAddress = bytes([0x00, 0xe0, 0x4c, 0x01, 0x13, 0x5b])
     _macAddress = bytes([0x0a, 0x00, 0x27, 0x00, 0x00, 0x00])
 
 
-    def __init__(self, interface, vendorId=0x504e, deviceId=0x5079, typeOfStation='Python ProfiNet', nameOfStation='io-py'):
-        # Thread
-        threading.Thread.__init__(self)
-        self._stop_event = threading.Event()
-
-        # create socket
-        self._dcpSocket = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.htons(0x8892))
-        self._dcpSocket.bind((interface, 0x8892))
-
+    def __init__(self, ip, sn, gw, nameOfStation='io-python'):
         # Initialize locale variables
-        self._vendorId = vendorId
-        self._deviceId = deviceId
-        self._typeOfStation = typeOfStation
+        self._ipAddress = ip
+        self._ipNetmask = sn
+        self._ipGateway = gw
         self._nameOfStation = nameOfStation
-        self._ipAddress = netifaces.ifaddresses(interface)[netifaces.AF_INET][0]['addr']
-        self._ipNetmask = netifaces.ifaddresses(interface)[netifaces.AF_INET][0]['netmask']
-        self._ipGateway = netifaces.gateways()['default'][netifaces.AF_INET][0]
-
-
-    def _stopped(self):
-        return self._stop_event.is_set()
-
-
-    def run(self):
-        while not self._stopped():
-            packet = self._dcpSocket.recvfrom(4096)
-            logging.debug("incoming packet: " + " ".join(hex(c) for c in packet[0]))
-            response = self._process_packet(packet[0])
-
-            if response:
-                logging.debug("outgoing packet: " + " ".join(hex(c) for c in response))
-                self._dcpSocket.send(response)
-
-
-    def stop(self):
-        self._dcpSocket.close()
-        self._stop_event.set()
 
 
     # Creates a DCP Block for option, suboption with data
@@ -247,15 +217,7 @@ class PnDcp(threading.Thread):
             return 0
 
 
-    def _process_packet(self, packet):
-        response = 0
-        dst = packet[0:6]
-        src = packet[6:12]
-        type = int.from_bytes(packet[12:14], byteorder='big')
-
-        frameId = int.from_bytes(packet[14:16], byteorder='big')
-        payload = packet[16:]
-
+    def process_packet(self, frameId, payload):
         # DCP hello
         if frameId == 0xfefc:
             logging.info('DCP: incoming hello (' + hex(frameId) + ')')
@@ -276,6 +238,6 @@ class PnDcp(threading.Thread):
         if response:
             if len(response) < 42:
                 response += bytes(42 - len(response))
-            return src + self._macAddress + b'\x81\x00\x00\x00' + b'\x88\x92' + response
+            return response
         else:
             return 0
