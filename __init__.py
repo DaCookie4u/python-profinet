@@ -12,7 +12,10 @@ class Profinet():
 
         self._ipAddress = netifaces.ifaddresses(interface)[netifaces.AF_INET][0]['addr']
         self._ipNetmask = netifaces.ifaddresses(interface)[netifaces.AF_INET][0]['netmask']
-        self._ipGateway = netifaces.gateways()['default'][netifaces.AF_INET][0]
+        if len(netifaces.gateways()['default']) > 0 and netifaces.gateways()['default'][netifaces.AF_INET]:
+            self._ipGateway = netifaces.gateways()['default'][netifaces.AF_INET][0]
+        else:
+            self._ipGateway = self._ipAddress
         self._macAddress = netifaces.ifaddresses(interface)[netifaces.AF_LINK][0]['addr']
         self._dcpService = dcp.Dcp(self._ipAddress, self._ipNetmask, self._ipGateway)
 
@@ -51,7 +54,7 @@ class Profinet():
             return 0
 
 if __name__ == "__main__":
-    server = Profinet("vboxnet0")
+    server = Profinet("enp0s20f0u1u1")
 
     while True:
         try:
