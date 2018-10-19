@@ -5,8 +5,8 @@ logging.basicConfig(level=logging.DEBUG)
 class Dcp():
     _typeOfStation = 'Python ProfiNET'
     _nameOfStation = 'io-python'
-    _vendorId = 0x504e
-    _deviceId = 0x5079
+    _vendorId = 0xFFFF
+    _deviceId = 0x0001
     _deviceRole = 0x01
     _macAddress = bytes([0x00, 0xe0, 0x4c, 0x01, 0x13, 0x5b])
     _macAddress = bytes([0x0a, 0x00, 0x27, 0x00, 0x00, 0x00])

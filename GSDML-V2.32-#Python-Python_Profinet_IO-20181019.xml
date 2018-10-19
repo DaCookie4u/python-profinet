@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ISO15745Profile xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.profibus.com/GSDML/2003/11/DeviceProfile ..\XSD\GSDML-DeviceProfile-V2.32.xsd" xmlns="http://www.profibus.com/GSDML/2003/11/DeviceProfile">
+    <ProfileHeader>
+        <ProfileIdentification>PROFINET Device Profile</ProfileIdentification>
+        <ProfileRevision>1.00</ProfileRevision>
+        <ProfileName>Device Profile for PROFINET Devices</ProfileName>
+        <ProfileSource>PROFIBUS Nutzerorganisation e. V. (PNO)</ProfileSource>
+        <ProfileClassID>Device</ProfileClassID>
+        <ISO15745Reference>
+            <ISO15745Part>4</ISO15745Part>
+            <ISO15745Edition>1</ISO15745Edition>
+            <ProfileTechnology>GSDML</ProfileTechnology>
+        </ISO15745Reference>
+    </ProfileHeader>
+    <ProfileBody>
+        <DeviceIdentity VendorID="0xFFFF" DeviceID="0x0001">
+            <InfoText TextId="EmptyString" />
+            <VendorName Value="PYTHON" />
+        </DeviceIdentity>
+        <DeviceFunction>
+            <Family MainFamily="I/O" ProductFamily="Python ProfiNET" />
+        </DeviceFunction>
+        <ApplicationProcess>
+            <DeviceAccessPointList>
+                <DeviceAccessPointItem ID="DAP1" DNS_CompatibleName="io-python" PhysicalSlots="1" FixedInSlots="1" DeviceAccessSupported="true" ModuleIdentNumber="0x43C" ObjectUUID_LocalIndex="100" RequiredSchemaVersion="V2.31" MinDeviceInterval="32" MaxSupportedRecordSize="4068" NameOfStationNotTransferable="false" AddressAssignment="LOCAL" MultipleWriteSupported="true" LLDP_NoD_Supported="true" CheckDeviceID_Allowed="true" ResetToFactoryModes="2" PNIO_Version="V2.32">
+                    <ModuleInfo>
+                        <Name TextId="DAP_Name_ID" />
+                        <InfoText TextId="DAP_Description_ID" />
+                        <OrderNumber Value="https://github.com/DaCookie4u/python-profinet" />
+                        <SoftwareRelease Value="V1.0" />
+                    </ModuleInfo>
+                    <CertificationInfo ConformanceClass="B" ApplicationClass="" NetloadClass="I" />
+                    <SubslotList>
+                        <SubslotItem SubslotNumber="32768" TextId="Interface_SubslotLabel" />
+                        <SubslotItem SubslotNumber="32769" TextId="Port32769_SubslotLabel" />
+                    </SubslotList>
+                    <IOConfigData MaxInputLength="20" MaxOutputLength="20" MaxDataLength="40" />
+                    <VirtualSubmoduleList>
+                        <VirtualSubmoduleItem SubmoduleIdentNumber="0x10000010" FixedInSubslots="1000" ID="VSM_2_1000" Writeable_IM_Records="1 2 3" MayIssueProcessAlarm="false">
+                            <IOData IOPS_Length="1" IOCS_Length="1">
+                                <Output>
+                                    <DataItem Length="16" DataType="OctetString" TextId="VSM_2_1000" />
+                                </Output>
+                            </IOData>
+                            <ModuleInfo>
+                                <Name TextId="VSM_2_1000_Name" />
+                                <InfoText TextId="VSM_2_1000_Comment" />
+                            </ModuleInfo>
+                        </VirtualSubmoduleItem>
+                        <VirtualSubmoduleItem SubmoduleIdentNumber="0x20000010" FixedInSubslots="1001" ID="VSM_2_1001" MayIssueProcessAlarm="false">
+                            <IOData IOPS_Length="1" IOCS_Length="1">
+                                <Input>
+                                    <DataItem Length="16" DataType="OctetString" TextId="VSM_2_1001" />
+                                </Input>
+                            </IOData>
+                            <ModuleInfo>
+                                <Name TextId="VSM_2_1001_Name" />
+                                <InfoText TextId="VSM_2_1001_Comment" />
+                            </ModuleInfo>
+                        </VirtualSubmoduleItem>
+                    </VirtualSubmoduleList>
+                    <SystemDefinedSubmoduleList>
+                        <InterfaceSubmoduleItem ID="Interface" SubslotNumber="32768" SubmoduleIdentNumber="0xf00" TextId="Interface" NetworkComponentDiagnosisSupported="true" ParameterizationDisallowed="false" SupportedMibs="MIB2" SupportedProtocols="SNMP;LLDP" PTP_BoundarySupported="true" DCP_BoundarySupported="true" SupportedRT_Classes="RT_CLASS_1">
+                            <ApplicationRelations StartupMode="Advanced;Legacy" NumberOfAR="1">
+                                <TimingProperties PreferredSendClock="32" SendClock="32" ReductionRatioNonPow2="1" ReductionRatioPow2="1 2 4 8 16 32 64 128 256 512" />
+                            </ApplicationRelations>
+                        </InterfaceSubmoduleItem>
+                        <PortSubmoduleItem ID="Port_1" TextId="Port_1" SubslotNumber="32769" SubmoduleIdentNumber="0xf01" ParameterizationDisallowed="false" LinkStateDiagnosisCapability="Up+Down" MAUTypes="16" PortDeactivationSupported="false" CheckMAUTypeSupported="true" SupportsRingportConfig="true" IsDefaultRingport="true" CheckMAUTypeDifferenceSupported="true">
+                            <MAUTypeList>
+                                <MAUTypeItem Value="16" AdjustSupported="true" />
+                            </MAUTypeList>
+                        </PortSubmoduleItem>
+                    </SystemDefinedSubmoduleList>
+                </DeviceAccessPointItem>
+            </DeviceAccessPointList>
+            <ExternalTextList>
+                <PrimaryLanguage>
+                    <Text TextId="EmptyString" Value="" />
+                    <Text TextId="Interface_SubslotLabel" Value="X1" />
+                    <Text TextId="Port32769_SubslotLabel" Value="Port1" />
+                    <Text TextId="DAP_Name_ID" Value="io-python" />
+                    <Text TextId="DAP_Description_ID" Value="Python ProfiNET I/O Device; 16 Bytes Input, 16 Bytes Output" />
+                    <Text TextId="Interface" Value="Interface" />
+                    <Text TextId="Port_1" Value="Port 1" />
+                    <Text TextId="VSM_2_1000_Name" Value="Output" />
+                    <Text TextId="VSM_2_1000_Comment" Value="" />
+                    <Text TextId="VSM_2_1000" Value="VSM_2_1000" />
+                    <Text TextId="VSM_2_1001_Name" Value="Input" />
+                    <Text TextId="VSM_2_1001_Comment" Value="" />
+                    <Text TextId="VSM_2_1001" Value="VSM_2_1001" />
+                </PrimaryLanguage>
+            </ExternalTextList>
+        </ApplicationProcess>
+    </ProfileBody>
+</ISO15745Profile>
