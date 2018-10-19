@@ -188,7 +188,7 @@ class Dcp():
             # Option: IP
             if blockOption == 0x01:
                 # We are unable to change any IP Suboptions
-                response = self._block_ctrl_response(blockOption, blockSuboption, 0x05)
+                response = self._block_ctrl_response(blockOption, blockSuboption, 0x03)
             # Option: Device
             elif blockOption == 0x02:
                 # Suboption: NameOfStation
