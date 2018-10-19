@@ -1,8 +1,7 @@
 import socket
 import logging
-logging.basicConfig(level=logging.DEBUG)
 
-class Dcp():
+class PnDcp():
     _typeOfStation = 'Python ProfiNET'
     _nameOfStation = 'io-python'
     _vendorId = 0xFFFF
