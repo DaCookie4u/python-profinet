@@ -13,6 +13,8 @@ server.start()
 
 This will start a raw socket receiving and sending 0x8892 frames and a UDP service on 34964 which will be used for the DCE/RPC part.
 
+There is a basic GSDML file to import to your favorite profinet io controller and check this thing out.
+
 ## What does work at the moment
 The DCP part is more or less complete. The service will properly respond to ident requests and you will be able to change the station name via DCP.
 
