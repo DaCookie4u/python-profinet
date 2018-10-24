@@ -1,170 +1,157 @@
 import socket
 import logging
+import struct
 
 class PnDcp():
-    _typeOfStation = 'Python ProfiNET'
-    _nameOfStation = 'io-python'
-    _vendorId = 0xFFFF
-    _deviceId = 0x0001
-    _deviceRole = 0x01
-    _macAddress = bytes([0x00, 0xe0, 0x4c, 0x01, 0x13, 0x5b])
-    _macAddress = bytes([0x0a, 0x00, 0x27, 0x00, 0x00, 0x00])
+    _dcp_header = struct.Struct('>BBIHH')
+    _block_header = struct.Struct('>BBH')
+    _dcp_set_header = struct.Struct('>BBHH')
+
+    _type_of_station = 'Python ProfiNET'
+    _name_of_station = 'io-python'
+    _vendor_id = 0xFFFF
+    _device_id = 0x0001
+    _device_role = 0x01
 
 
-    def __init__(self, ip, sn, gw, nameOfStation='io-python'):
+    def __init__(self, ip, sn, gw, name_of_station='io-python'):
         # Initialize locale variables
-        self._ipAddress = ip
-        self._ipNetmask = sn
-        self._ipGateway = gw
-        self._nameOfStation = nameOfStation
+        self._ip_address = ip
+        self._ip_netmask = sn
+        self._ip_gateway = gw
+        self._name_of_station = name_of_station
 
 
-    # Creates a DCP Block for option, suboption with data
-    def _dcp_block(self, option, suboption, data):
-        block = bytes([option, suboption])   # Option: Device / Suboption: suboption
-        block += len(data).to_bytes(2, byteorder='big')
-        block += data
-        # Add padding if necessary
-        if len(data) % 2 > 0:
-            block += bytes([0])
-        return block
+    def _create_block(self, option, suboption):
+        # IP
+        if option == 1:
+            # IP/IP block
+            if suboption == 2:
+                s = struct.Struct('>H4s4s4s')
+                data = s.pack(*(
+                    1, # BlockInfo: IP set (1)
+                    socket.inet_aton(self._ip_address),
+                    socket.inet_aton(self._ip_netmask),
+                    socket.inet_aton(self._ip_gateway)
+                ))
 
+        #  Device
+        elif option == 2:
+            # Device/Manufacturer specific block containing typeOfStation
+            if suboption == 1:
+                data = (0).to_bytes(2, byteorder='big') # BlockInfo: Reserved (0)
+                data += self._type_of_station.encode("utf-8")
 
-    # creates a Device/Manufacturer specific block containing typeOfStation
-    def _block_device_manuf(self):
-        data = bytes([0x00, 0x00]) # BlockInfo: Reserved (0)
-        data += bytes(self._typeOfStation, "utf-8")
-        return self._dcp_block(0x02, 0x01, data)
+            # Device/Name of Station block
+            elif suboption == 2:
+                data = (0).to_bytes(2, byteorder='big') # BlockInfo: Reserved (0)
+                data += self._name_of_station.encode("utf-8")
 
+            # Device/Device ID block
+            elif suboption == 3:
+                s = struct.Struct('>HHH')
+                data = s.pack(*(
+                    0,  # BlockInfo: Reserved (0)
+                    self._vendor_id,
+                    self._device_id
+                ))
 
-    # creates a Device/Name of Station block
-    def _block_device_nameofstation(self):
-        data = bytes([0x00, 0x00]) # BlockInfo: Reserved (0)
-        data += bytes(self._nameOfStation, "utf-8")
-        return self._dcp_block(0x02, 0x02, data)
+            # Device/Device Role block
+            elif suboption == 4:
+                s = struct.Struct('>HBB')
+                data = s.pack(*(
+                    0, # BlockInfo: Reserved (0)
+                    self._device_role,
+                    0 # Reserved (0)
+                ))
 
+        length = len(data)
+        s = struct.Struct('>BBH' + str(length) + 's' + ('x' if length % 2 else ''))
+        block = (option, suboption, length, data)
 
-    # creates a Device/Device ID block
-    def _block_device_dev_id(self):
-        data = bytes([0x00, 0x00]) # BlockInfo: Reserved (0)
-        data += self._vendorId.to_bytes(2, byteorder='big')
-        data += self._deviceId.to_bytes(2, byteorder='big')
-        return self._dcp_block(0x02, 0x03, data)
-
-
-    # creates a Device/Device Role block
-    def _block_device_dev_role(self):
-        data = bytes([0x00, 0x00]) # BlockInfo: Reserved (0)
-        data += bytes([self._deviceRole])
-        data += bytes([0x00]) # Reserved: 0
-        return self._dcp_block(0x02, 0x04, data)
+        return s.pack(*block)
 
 
     # creates a Control/Response block for option, suboption with blockerror
     def _block_ctrl_response(self, option, suboption, blockerror):
-        data = bytes([option, suboption]) + bytes([blockerror])
-        return self._dcp_block(0x05, 0x04, data)
+        s = struct.Struct('>BBHBBBx')
+        return s.pack(*(5, 4, 3, option, suboption, blockerror))
 
 
-    def _block_ip_ip(self):
-        block = bytes([0x01, 0x02])     # Option: IP / Suboption: IP
-        block += (14).to_bytes(2, byteorder='big') # DCPBlockLength
-        block += bytes([0x00, 0x01])    # BlockInfo: IP set
-        block += socket.inet_aton(self._ipAddress)
-        block += socket.inet_aton(self._ipNetmask)
-        block += socket.inet_aton(self._ipGateway)
-        return block
-
-
-    def _identify_response(self, xid):
-        res = bytes()
+    def _identify_response(self):
         # 2, 1: Device/Type Of Station
-        res += self._block_device_manuf()
+        identify = self._create_block(2, 1)
         # 2, 2: Device/Name Of Station
-        res += self._block_device_nameofstation()
+        identify += self._create_block(2, 2)
         # 2, 3: Device/Device ID
-        res += self._block_device_dev_id()
+        identify += self._create_block(2, 3)
         # 2, 4: Device/Device Role
-        res += self._block_device_dev_role()
+        identify += self._create_block(2, 4)
         # 1, 2: IP/IP
-        res += self._block_ip_ip()
-        return res
+        identify += self._create_block(1, 2)
+        return identify
 
 
     def _process_ident_req(self, payload):
         response = 0
-        serviceId = payload[0]
-        serviceType = payload[1]
-        xId = payload[2:6]
 
-        responseDelay = int.from_bytes(payload[6:8], byteorder='big')
-        dataLength = int.from_bytes(payload[8:10], byteorder='big')
+        (service_id, service_type, xid, response_delay, data_length) = self._dcp_header.unpack(payload[0:10])
 
-        if dataLength > 0:
-            data = payload[10:10+dataLength]
+        if data_length > 0:
+            data = payload[10:10+data_length]
         else:
             return 0
 
         # Identify/Request
-        if serviceId == 5 and serviceType == 0:
-            blockOption = data[0]
-            blockSuboption = data[1]
-
-            blockDataLength = int.from_bytes(data[2:4], byteorder='big')
+        if service_id == 5 and service_type == 0:
+            (block_option, block_suboption, block_data_len) = self._block_header.unpack(data[0:4])
 
             # Block: All/All
-            if blockOption == 255 and blockSuboption == 255:
-                response = self._identify_response(xId)
+            if block_option == 255 and block_suboption == 255:
+                response = self._identify_response()
             # Block: Device/NameOfStation
-            elif blockDataLength > 0 and blockOption == 2 and blockSuboption == 2:
-                nameOfStation = data[4:4+blockDataLength].decode("utf-8")
-                if nameOfStation == self._nameOfStation:
-                    response = self._identify_response(xId)
-
-            if response:
-                hdr = bytes([0xfe, 0xff])                           # DCP identify response
-                hdr += bytes([serviceId, 1])                        # ServiceID/ServiceType
-                hdr += xId                                          # Xid
-                hdr += bytes([0x00, 0x00])                          # Reserved
-                hdr += len(response).to_bytes(2, byteorder='big')   # DCPDataLength
-                response = hdr + response
+            elif block_data_len > 0 and block_option == 2 and block_suboption == 2:
+                name_of_station = data[4:4+block_data_len].decode("utf-8")
+                if name_of_station == self._name_of_station:
+                    response = self._identify_response()
 
         if response:
-            return response
+            hdr = (service_id, 1, xid, 0, len(response))
+            return (0xfeff).to_bytes(2, byteorder='big') + self._dcp_header.pack(*hdr) + response
         else:
             return 0
 
 
     def _process_get_set_request(self, payload):
         response = 0
-        serviceId = payload[0]
-        serviceType = payload[1]
-        if serviceType == 0x01: return 0 # TODO: we ignore responses for now
-        xId = payload[2:6]
 
-        dataLength = int.from_bytes(payload[8:10], byteorder='big')
+        (service_id, service_type, xid, response_delay, data_length) = self._dcp_header.unpack(payload[0:10])
 
-        if dataLength > 0:
-            data = payload[10:10+dataLength]
+        # TODO: we ignore responses for now
+        if service_type == 0x01:
+            return 0
+
+        if data_length > 0:
+            data = payload[10:10+data_length]
         else:
             return 0
 
         # Get/Request
-        if serviceId == 0x03 and serviceType == 0x00:
+        if service_id == 0x03 and service_type == 0x00:
             # Iterate over all requested options
             i = 0
-            reqOptions = []
+            req_options = []
             while i < len(data):
-                reqOptions.append([data[i], data[i+1]])
+                req_options.append([data[i], data[i+1]])
                 i += 2
 
             response = bytes()
-            for option in reqOptions:
+            for option in req_options:
                 # Option: IP
                 if option[0] == 0x01:
                     # Suboption: IP parameter
                     if option[1] == 0x02:
-                        response += self._block_ip_ip()
+                        response += self._create_block(1, 2)
                     # Suboption: unsupported
                     else:
                         response += self._block_ctrl_response(option[0], option[1], 0x02)
@@ -173,45 +160,37 @@ class PnDcp():
                     response += self._block_ctrl_response(option[0], option[1], 0x01)
 
         # Set/Request
-        elif serviceId == 0x04 and serviceType == 0x00:
-            blockOption = data[0]
-            blockSuboption = data[1]
+        elif service_id == 0x04 and service_type == 0x00:
+            (block_option, block_suboption, block_data_len) = self._block_header.unpack(data[0:4])
 
-            blockDataLength = int.from_bytes(data[2:4], byteorder='big')
-
-            if blockDataLength > 0:
+            if block_data_len > 0:
                 blockQualifier = int.from_bytes(data[4:6], byteorder='big')
-                blockData = data[6:4+blockDataLength]
-
+                blockData = data[6:4+block_data_len]
 
             # Option: IP
-            if blockOption == 0x01:
+            if block_option == 0x01:
                 # We are unable to change any IP Suboptions
-                response = self._block_ctrl_response(blockOption, blockSuboption, 0x03)
+                response = self._block_ctrl_response(block_option, block_suboption, 0x03)
             # Option: Device
-            elif blockOption == 0x02:
-                # Suboption: NameOfStation
-                if blockSuboption == 0x02:
-                    nameOfStation = blockData.decode("utf-8")
-                    self._nameOfStation = nameOfStation
-                    if self._nameOfStation == nameOfStation:
-                        response = self._block_ctrl_response(blockOption, blockSuboption, 0x00)
+            elif block_option == 0x02:
+                # Suboption: name_of_station
+                if block_suboption == 0x02:
+                    name_of_station = blockData.decode("utf-8")
+                    self._name_of_station = name_of_station
+                    if self._name_of_station == name_of_station:
+                        response = self._block_ctrl_response(block_option, block_suboption, 0x00)
                     else:
-                        response = self._block_ctrl_response(blockOption, blockSuboption, 0x03)
+                        response = self._block_ctrl_response(block_option, block_suboption, 0x03)
                 # Suboption: unsupported
                 else:
-                    response = self._block_ctrl_response(blockOption, blockSuboption, 0x02)
+                    response = self._block_ctrl_response(block_option, block_suboption, 0x02)
             # Option: unsupported
             else:
-                response = self._block_ctrl_response(blockOption, blockSuboption, 0x01)
+                response = self._block_ctrl_response(block_option, block_suboption, 0x01)
 
         if response:
-            hdr = bytes([0xfe, 0xfd])                           # DCP get/set
-            hdr += bytes([serviceId, 0x01])                     # ServiceID/ServiceType
-            hdr += xId                                          # Xid
-            hdr += bytes([0x00, 0x00])                          # Reserved
-            hdr += len(response).to_bytes(2, byteorder='big')   # DCPDataLength
-            return hdr + response
+            hdr = (service_id, 1, xid, 0, len(response))
+            return (0xfefd).to_bytes(2, byteorder='big') + self._dcp_header.pack(*hdr) + response
         else:
             return 0
 
