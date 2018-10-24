@@ -75,5 +75,4 @@ class Profinet():
 
 if __name__ == "__main__":
     server = Profinet("vboxnet0")
-
     server.start()
