@@ -46,9 +46,20 @@ class Profinet():
             (packet, address) = self._pn_socket.recvfrom(4096)
             logging.debug("incoming PN packet: " + " ".join(hex(c) for c in packet))
 
+            response = 0
+
             s = struct.Struct('>6s6sHH')
             (dst, src, type, frameId) = s.unpack(packet[0:16])
-            response = self._dispatch_pn_packet(frameId, packet[16:])
+
+            if frameId >= 0xfefc and frameId <= 0xfeff:
+                logging.debug('Dispatching packet to DCP')
+                response = self._dcp.process_packet(frameId, packet[16:])
+            elif frameId >= 0x8000 and frameId <= 0xBBFF:
+                loggin.debug('Dispatching packet to PNIO')
+                response = 0
+            else:
+                logging.info('Received unknown FrameID: ' + hex(frameId))
+                response = 0
 
             if response:
                 s = struct.Struct('>6s6sHHH')
@@ -62,20 +73,7 @@ class Profinet():
                 self._pn_socket.send(response)
 
 
-    def _dispatch_pn_packet(self, frameId, payload):
-        # DCP hello
-        if frameId >= 0xfefc and frameId <= 0xfeff:
-            logging.debug('Dispatching packet to DCP')
-            return self._dcp.process_packet(frameId, payload)
-        elif frameId >= 0x8000 and frameId <= 0xBBFF:
-            loggin.debug('Dispatching packet to PNIO')
-            return 0
-        else:
-            logging.info('Received unknown FrameID: ' + hex(frameId))
-            return 0
-
-
 if __name__ == "__main__":
-    server = Profinet("enp0s20f0u1u1")
+    server = Profinet("vboxnet0")
 
     server.start()
